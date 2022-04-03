@@ -1,2 +1,1 @@
-release: python manage.py migrate
-web: gunicorn app.wsgi
+web: python manage.py localhost:8000
