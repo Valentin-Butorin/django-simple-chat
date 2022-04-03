@@ -75,7 +75,7 @@
     const modal = new bootstrap.Modal(document.getElementById('modal'));
 
     function connect() {
-        return new WebSocket('ws:///' + window.location.host + '/ws/chat/');
+        return new WebSocket('wss:///' + window.location.host + '/ws/chat/');
     }
 
     function init() {
