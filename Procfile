@@ -1,1 +1,1 @@
-web: python manage.py localhost:8000
+web: gunicorn app.wsgi --logs
