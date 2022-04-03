@@ -78,6 +78,7 @@
                 'beforeend',
                 data.message + '\n'
             )
+            content.scrollTop = content.scrollHeight;
         }
 
         chatSocket.onopen = function (event) {
