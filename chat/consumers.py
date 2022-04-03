@@ -30,7 +30,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_send(self.group_name, event)
 
     async def disconnect(self, code):
-        print(self.scope)
         key = self.get_secret_key()
         if key:
             CLIENTS.remove(key)
