@@ -1,1 +1,1 @@
-web: gunicorn --pythonpath app  progressor_backend.wsgi --log-file -
+web: gunicorn --pythonpath app  app.wsgi --log-file -
