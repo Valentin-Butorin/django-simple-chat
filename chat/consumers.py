@@ -52,7 +52,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         dt = datetime.now().strftime('%d.%m.%Y %H:%M')
 
-        result = f'{dt} - {username} - {message}'
+        result = f'<div class="reieved-message"><div class="message-title">{dt} - {username}:</div><div>{message}</div></div>'
 
         event = {
             'type': 'send_message',

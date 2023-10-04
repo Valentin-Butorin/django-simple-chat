@@ -13,21 +13,62 @@
             crossorigin="anonymous"></script>
     <style>
         html, body {
-            height: 100%;
             margin: 0 auto;
+            background-color: #F9F9F9;
+        }
+
+        .header {
+            color: #888888;
+            height: 50px;
+        }
+
+        .username-block {
+            height: 40px;
+        }
+
+        .wrapper {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .reieved-message {
+            margin-bottom: 12px;
+        }
+
+        .reieved-message .message-title {
+            color: #888888;
+        }
+
+        .content {
+            overflow-y: scroll;
+            flex: 1;
+        }
+
+        textarea.message-input {
+            resize: none;
+            outline: none;
+            max-height: 50vh;
+            overflow-y: scroll;
+        }
+
+        button.button-send-message {
+            height: 48px;
+            width: 48px;
         }
     </style>
 </head>
 
 <body>
-<div class="container" style="height: 100%; margin: 0 auto;">
-    <div class="wrapper" style="min-height: 100%; display: flex; flex-direction: column;">
-        <header class="header mt-2 px-2" style="height:50px;">
+<div class="container">
+    <div class="wrapper">
+        <div class="header my-2 px-2">
             <div class="row d-flex align-items-center">
                 <div class="col">
-                    <span class="d-flex align-items-center my-2" style="height: 40px;">
+                    <span class="username-block d-flex align-items-center my-2">
                         <label for="username-input">Username</label>
-                        <input type="text" class="username-input form-control shadow border-2 ms-2"
+                        <input type="text"
+                               class="username-input form-control bg-white border border-light rounded shadow-sm ms-2"
                                id="username-input" value="{{ username }}">
                     </span>
                 </div>
@@ -35,16 +76,17 @@
                     <span class="d-flex align-items-center my-2">Online:&nbsp;<span id="onlineCounter">0</span></span>
                 </div>
             </div>
-        </header>
-        <textarea readonly class="content card shadow border-2 p-2 mt-2" id="content"
-                  style="flex: 1; resize: none; outline: none;"></textarea>
-        <footer class="footer my-2" style="height:60px;">
-            <span class="d-flex align-items-center" style="height: 40px;">
-                  <label for="message-input">Message</label>
-                         <input type="text" class="message-input form-control border-2 shadow ms-2" id="message-input">
-                  <button class="btn btn-primary ms-2" id="send-button">></button>
+        </div>
+        <div class="content bg-white border border-light rounded shadow-sm p-3 my-2" id="content"></div>
+        <div class="footer my-2 mb-4">
+            <span class="d-flex align-items-center">
+                 <textarea type="text"
+                           class="message-input form-control bg-white border border-light rounded shadow-sm"
+                           id="message-input"></textarea>
+                  <button class="send-message-button btn btn-primary shadow-sm mx-4"
+                          id="send-button">></button>
             </span>
-        </footer>
+        </div>
     </div>
 </div>
 
@@ -66,27 +108,44 @@
 </div>
 
 <script type="text/javascript">
-    let chatSocket;
-    const sendButton = document.getElementById('send-button');
-    const usernameInput = document.getElementById('username-input');
-    const messageInput = document.getElementById('message-input');
-    const content = document.getElementById('content');
-    const onlineCounter = document.getElementById('onlineCounter');
-    const modal = new bootstrap.Modal(document.getElementById('modal'));
-
-    function connect() {
-        return new WebSocket('wss:///' + window.location.host + '/ws/chat/');
-    }
-
     function init() {
+        let chatSocket;
+        const sendButton = document.getElementById('send-button');
+        const usernameInput = document.getElementById('username-input');
+        const messageInput = document.getElementById('message-input');
+        const content = document.getElementById('content');
+        const onlineCounter = document.getElementById('onlineCounter');
+        const modal = new bootstrap.Modal(document.getElementById('modal'));
+
+        usernameInput.value = decodeURIComponent(usernameInput.value);
+        messageInput.style.height = '64px';
+
+        function onInputTextareaHandler(event) {
+            event.preventDefault();
+            if (event.currentTarget.value) {
+                event.currentTarget.style.height = 'auto';
+                event.currentTarget.style.height = event.currentTarget.scrollHeight + 4 + "px";
+            } else {
+                event.currentTarget.style.height = '64px';
+            }
+        }
+
+        messageInput.addEventListener('input', onInputTextareaHandler);
+
+        function getWebsocketPath() {
+            const protocol = location.protocol === 'https:' ? 'wss:///' : 'ws:///';
+            return protocol + window.location.host + '/ws/chat/'
+        }
+
+        function connect() {
+            return new WebSocket(getWebsocketPath());
+        }
+
         chatSocket = connect();
         chatSocket.onmessage = function (event) {
             const data = JSON.parse(event.data);
             if (data.message) {
-                content.insertAdjacentHTML(
-                    'beforeend',
-                    data.message + '\n'
-                )
+                content.insertAdjacentHTML('beforeend', data.message)
                 content.scrollTop = content.scrollHeight;
             }
             if (data.users_count) {
@@ -103,7 +162,8 @@
             modal.show();
         }
 
-        sendButton.addEventListener('click', function (event) {
+
+        function sendMessageHandler() {
             this.disabled = true;
             messageInput.disabled = true;
             usernameInput.disabled = true;
@@ -122,13 +182,22 @@
             messageInput.disabled = false;
             usernameInput.disabled = false;
             messageInput.value = '';
+            messageInput.style.height = '64px';
             messageInput.focus();
+        }
+
+        sendButton.addEventListener('click', sendMessageHandler)
+
+        document.addEventListener('keypress', function (event) {
+            if (event.target === messageInput && !event.shiftKey && event.key === 'Enter') {
+                event.preventDefault();
+            }
         })
 
         messageInput.addEventListener('keydown', function (event) {
-            if (messageInput.value.trim())
-                if (event.keyCode === 13) {
-                    if (!this.disabled) {
+            if (event.target === messageInput && !event.shiftKey && messageInput.value.trim())
+                if (event.key === 'Enter') {
+                    if (!event.currentTarget.disabled) {
                         sendButton.click();
                     }
                 }
